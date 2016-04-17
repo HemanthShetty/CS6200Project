@@ -12,23 +12,14 @@ N=0
 docTokenCountMapping={}
 avdl=0
 charactersToBeRemovedRegex=re.compile('[^a-zA-Z0-9-.,]')
-resultDirectoryName="BM25"
+resultDirectoryName="TFIDF"
 
 
 
-def get_term_BM25_score(ni,fi,qfi,dl):
-    k1=1.2
-    b=0.75
-    k2=100
-    score=0.0
-    if fi==0:
-        score=0.0
-    else:
-        K=k1*((1-b)+b*float(dl)/float(avdl))
-        comp1=float(N-ni+0.5)/float(ni+0.5)
-        comp2=float((k1+1)*fi)/float(K+fi)
-        comp3=float((k2+1)*qfi)/float(k2+qfi)
-        score=math.log(comp1)*comp2*comp3
+def get_term_TFIDF_score(documentFrequency,frequencyOfTermInDocument,docLength):
+    termFrequencyWeight=float(frequencyOfTermInDocument)/float(docLength)
+    invertedDocumentFrequency=float(math.log(N/documentFrequency))
+    score=float(termFrequencyWeight)*float(invertedDocumentFrequency)
     return score
 
 def calculateDocumentStatisticsFromIndex(unigramIndex):
@@ -117,13 +108,12 @@ def main(argv):
                 if unigramIndex.has_key(queryTerm):
                     invertedList=unigramIndex[queryTerm]
                     documentFrequency=len(invertedList)
-                    queryFrequency=queryTerms.count(queryTerm)
                     for entry in invertedList:
                         docID=entry[0]
                         docName="CACM-"+str(docID)
                         docLength=docTokenCountMapping[docID]
                         frequencyOfTermInDocument=entry[1]
-                        termScore=get_term_BM25_score(documentFrequency,frequencyOfTermInDocument,queryFrequency,docLength)
+                        termScore=get_term_TFIDF_score(documentFrequency,frequencyOfTermInDocument,docLength)
                         if doc_score.has_key(docName):
                             doc_score[docName]=doc_score[docName]+termScore
                         else:
