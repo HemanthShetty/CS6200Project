@@ -1,8 +1,30 @@
 # CS6200Project
 Information Retrieval Project
 
-Initial Setup
-There are two python files which have to be run in order
+There are 7 retrieval systems implemented in this project, as follows:
+SYSTEM NUMBERS
+1. BM25
+2. TFIDF
+3. Lucene (not implemented in this script
+4. Query expansion(pseudo relevance) + BM25
+5. Query expansion(synonyms) + BM25
+6. BM25 + stopping
+7. BM25 + stemming
+
+Model 3 uses Lucene and is implemented in Java.
+
+#TODO
+instructions for lucene
+
+All the other models are implemented in python and the instructions to run them are provided below.
+
+******
+Python programs
+
+Dependencies:
+- PyDictionary: for dictionary and synonyms. Computer has to be on the internet as it makes web requests
+
+There is a sequence of a few python files which have to be run in order:
 
 1)Indexing.py
 
@@ -11,32 +33,17 @@ To create indexing file run following command,
 
 Command takes no argument. data.txt which has the raw crawled documents is presumed to be in the same working directory
 
-2)BM25.py
-
 After running Indexing.py an index file called unigramIndex.txt and mapping file called docIDMapping.txt are created in the same directory.   
 
-To get BM25 ranking, run following command,
-   example- python BM25.py
+2)RetrievalModels.py
 
-a text file known as queries.txt is present in the same working directory. It has the value,
-1-global warming potential
-2-green power renewable energy
-3-solar energy california
-4-light bulb bulbs alternative alternatives 
+Takes as an argument the system number and run the related retrieval model, reading the queries and the index and producing an output file with the ranking of documents for each query (TREC eval format)
 
-format-> {queryID}-{Query}
+To run the Retrieval Models:
+   example- python RetrievalModels.py --sys=1
 
-Lucene
-Run the java file HW3.java in the command line,
-In the setup project we need a referance to external jar json-simple-1.1.1.jar
-This is because data.txt has json content that needs to be decoded
+3)Evaluation.py
+Takes as an argument the system number and run the evaluation on the related retrieval model. 
 
-These two files must be in the current working directory of the java program{they are included in source code},
-1)queries.txt- contains queries in this format(no query ID)
-
-global warming potential
-green power renewable energy
-solar energy california
-light bulb bulbs alternative alternatives 
-
-2)data.txt - raw crawled articles in json format
+To run the Evaluation :
+   example- python Evaluation.py --sys=1
