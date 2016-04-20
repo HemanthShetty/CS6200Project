@@ -6,6 +6,10 @@ from collections import defaultdict
 QUERY_DOCUMENTS_FILE = "../data/cacm.rel"
 
 
+class prettyfloat(float):
+    def __repr__(self):
+        return "%0.2f" % self
+
 def readQueryDocumentsRanking(filename):
     query_document = defaultdict(list)
 
@@ -36,6 +40,24 @@ def calcQueryPrecision(relevant_docs, docs):
     avg_precision = sum(precision_docs) / len(precision_docs)
 
     return avg_precision, precision_docs
+
+
+def calcQueryRecall(relevant_docs, docs):
+     
+    recall_docs = []
+    docs_found = 0
+    n_docs = len(relevant_docs)
+    
+    for d in docs:
+        if d in relevant_docs:
+            docs_found += 1
+
+        r = float(docs_found) / n_docs
+        recall_docs.append(r)
+
+    avg_recall = sum(recall_docs) / len(recall_docs)
+
+    return avg_recall, recall_docs
 
 
 def calcMeanAvgPrecision(query_relevant_docs, query_results):
@@ -69,6 +91,31 @@ def calcPrecisionAtK(query_relevant_docs, query_results, k):
     return mean_precision
 
 
+def calcPrecision(query_relevant_docs, query_results):
+    precision = defaultdict(list)
+
+    # evaluate for every query and relevant documents
+    for q_id,relevant_docs in query_relevant_docs.items():
+        query_docs = query_results[q_id]
+        _,p = calcQueryPrecision(relevant_docs, query_docs)
+
+        precision[q_id] = p
+
+    return precision
+
+def calcRecall(query_relevant_docs, query_results):
+    recall = defaultdict(list)
+
+    # evaluate for every query and relevant documents
+    for q_id,relevant_docs in query_relevant_docs.items():
+        query_docs = query_results[q_id]
+        _,r = calcQueryRecall(relevant_docs, query_docs)
+
+        recall[q_id] = r
+
+    return recall
+
+
 def calcRR(relevant_docs, docs):
     
     for n,d in enumerate(docs,start=1):
@@ -92,6 +139,20 @@ def calcMeanRR(query_relevant_docs, query_results):
     mean_RR = sum(docs_RR) / len(docs_RR)
 
     return mean_RR
+
+
+def expPrecisionRecallTables(precision, recall, sys_id):
+    
+    filename = "model%d_precision_recall_talbles.txt" % sys_id
+    fp = open(filename, 'w')
+
+    query_ids = precision.keys()
+    for q_id in query_ids:
+        fp.write("Query %d:\n" % q_id)
+        fp.write("Precision: %s\n" % str(map(prettyfloat,precision[q_id])))
+        fp.write("Recall: %s\n\n" % str(map(prettyfloat,recall[q_id])))
+
+    fp.close()
 
 def main():
     
@@ -125,6 +186,12 @@ def main():
     print "MRR: \t%f" % mRR 
     print "P@5: \t%f" % pAt5 
     print "P@20: \t%f" % pAt20 
+
+    precision = calcPrecision(eval_results, sys_results)
+    recall = calcRecall(eval_results, sys_results)
+    
+
+    expPrecisionRecallTables(precision, recall, sys_id)
 
 if __name__ == '__main__':
     main()
