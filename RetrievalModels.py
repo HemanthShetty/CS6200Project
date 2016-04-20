@@ -5,8 +5,8 @@ SYSTEM NUMBERS
 3. Lucene (not implemented in this script
 4. Query expansion(pseudo relevance) + BM25
 5. Query expansion(synonyms) + BM25
-6. Query expansion(synonyms+stopping) + BM25
-7. Stemming + BM25
+6. BM25 + stopping
+7. BM25 + stemming
 """
 
 import sys
@@ -21,9 +21,9 @@ from QueryExpansion import DictExpandQuery
 
 
 UNIGRAM_INDEX_FILE = "unigramIndex.txt"
-UNIGRAM_STEM_INDEX_FILE = "unigramStemIndex.txt"
+UNIGRAM_STEM_INDEX_FILE = "stemIndex.txt"
 QUERY_FILE = "CACM_QUERY.txt"
-QUERY_STEM_FILENAME = ""
+QUERY_STEM_FILE = "../data/cacm_stem.query.txt"
 
 
 "less than 1000 because document names overlap after removing - and _ and these files have same content"
@@ -57,10 +57,10 @@ def get_term_BM25_score(ni,fi,qfi,dl):
     return score
 
 
-def calculateDocumentStatisticsFromIndex(unigramIndex):
+def calculateDocumentStatisticsFromIndex(index):
     totalNumberOfTokens=0
-    for term in unigramIndex:
-        invertedList=unigramIndex[term]
+    for term in index:
+        invertedList=index[term]
         for entry in invertedList:
             docId=entry[0]
             frequency=entry[1]
@@ -84,18 +84,10 @@ def writeDocumentScoresToFile(doc_score, queryID, fp):
     doc_rank=1
 
     for doc in sorted_docscore:
-        fp.write(str(queryID)+"Q0 "+doc[0]+" "+str(doc_rank)+" "+str(doc[1])+" Hemanth"+"\n")
+        line = ' '.join([str(queryID), "Q0", doc[0], str(doc_rank), str(doc[1]), "hag"])
+        fp.write("%s\n" % line)
         doc_rank+=1
 
-
-def getListOfQueries(queryFileContent):
-    regex = re.compile(r'<DOCNO>(.*?)</DOCNO>(.*?)</DOC>',re.DOTALL)
-    queries = re.findall(regex,queryFileContent)
-    return queries
-
-def getListOfStemmedQueries(queryFileContent):
-    #TODO
-    return NULL
 
 
 def tokenizeQuery(query):
@@ -127,6 +119,34 @@ def tokenizeQuery(query):
     return queryTokens
 
 
+def readIndex(sys_id):
+    index = None
+
+    if sys_id == 7:
+        with open(UNIGRAM_STEM_INDEX_FILE) as data_file:
+            index = json.load(data_file)
+    else:
+        with open(UNIGRAM_INDEX_FILE) as data_file:
+            index = json.load(data_file)
+
+    return index 
+
+def readQueries(sys_id):
+    queries = []
+
+    if sys_id == 7:
+        with open(QUERY_STEM_FILE) as queryFileContent:
+            for i,line in enumerate(queryFileContent, start=1):
+                queries.append((i,line))
+
+    else:
+        with open(QUERY_FILE) as queryFileContent:
+            regex = re.compile(r'<DOCNO>\s+(.*?)\s+</DOCNO>(.*?)</DOC>',re.DOTALL)
+            queries = re.findall(regex,queryFileContent.read())
+
+    return queries
+
+
 def main():
 
     try:
@@ -138,64 +158,64 @@ def main():
     opts = {x[0]:x[1] for x in opts}
     sys_id = int(opts['--sys'])
 
-    if sys_id not in range(1,7) or sys_id == 3:
+    if sys_id not in range(1,8) or sys_id == 3:
         print "System number has to be from 1 to 7. 3 is Lucene"
         sys.exit(-1)
 
-
-    with open(UNIGRAM_INDEX_FILE) as data_file:
-        unigramIndex = json.load(data_file)
+    index = readIndex(sys_id)
 
     "Calculate the total number of documents in the index and the average document length"
-    calculateDocumentStatisticsFromIndex(unigramIndex)
-
-    output_file = open("model%d" % sys_id+"_"+"queries_results.txt",'w')
-
-    with open(QUERY_FILE) as query_content:
-        queryEntries=getListOfQueries(query_content.read())
-
-        for queryEntry in queryEntries:
-            query=queryEntry[1].rstrip()
-            queryID=queryEntry[0].lstrip()
-            queryTerms=tokenizeQuery(query)
-            doc_score={}
-
-            if sys_id == 5:
-                queryTerms = DictExpandQuery(queryTerms)
-
-            distinctQueryTerms=list(set(queryTerms))
-
-            for queryTerm in distinctQueryTerms:
-                if unigramIndex.has_key(queryTerm):
-                    invertedList=unigramIndex[queryTerm]
-                    documentFrequency=len(invertedList)
-                    queryFrequency=queryTerms.count(queryTerm)
-
-                    for entry in invertedList:
-                        docID=entry[0]
-                        docName="CACM-"+str(docID)
-                        docLength=docTokenCountMapping[docID]
-                        frequencyOfTermInDocument=entry[1]
-
-                        if sys_id != 2:
-                            termScore=get_term_BM25_score(documentFrequency,
-                                                            frequencyOfTermInDocument,
-                                                            queryFrequency,
-                                                            docLength)
-                        else:
-                            termScore=get_term_TFIDF_score(documentFrequency,
-                                                            frequencyOfTermInDocument,
-                                                            docLength)
+    calculateDocumentStatisticsFromIndex(index)
 
 
-                        if doc_score.has_key(docName):
-                            doc_score[docName]=doc_score[docName]+termScore
-                        else:
-                            doc_score[docName]=termScore
+    outputFile = open("model%d" % sys_id+"_"+"queries_results.txt",'w')
 
-            writeDocumentScoresToFile(doc_score,queryID,output_file)
+    queries = readQueries(sys_id) 
 
-    output_file.close()    
+    for queryID,query in queries:
+        queryTerms=tokenizeQuery(query)
+        doc_score={}
+
+        if sys_id == 4:
+            # TODO pseudo relevance
+            queryTerms = queryTerms
+        elif sys_id == 5:
+            queryTerms = DictExpandQuery(queryTerms)
+
+        distinctQueryTerms=list(set(queryTerms))
+
+        for queryTerm in distinctQueryTerms:
+            if index.has_key(queryTerm):
+                invertedList=index[queryTerm]
+                documentFrequency=len(invertedList)
+                queryFrequency=queryTerms.count(queryTerm)
+
+                for entry in invertedList:
+                    docID=entry[0]
+                    docName="CACM-"+str(docID)
+                    docLength=docTokenCountMapping[docID]
+                    frequencyOfTermInDocument=entry[1]
+
+                    if sys_id != 2:
+                        termScore=get_term_BM25_score(documentFrequency,
+                                                        frequencyOfTermInDocument,
+                                                        queryFrequency,
+                                                        docLength)
+                    else:
+                        termScore=get_term_TFIDF_score(documentFrequency,
+                                                        frequencyOfTermInDocument,
+                                                        docLength)
+
+
+                    if doc_score.has_key(docName):
+                        doc_score[docName]=doc_score[docName]+termScore
+                    else:
+                        doc_score[docName]=termScore
+
+        writeDocumentScoresToFile(doc_score,queryID,outputFile)
+
+    outputFile.close()    
+
 
 if __name__ == "__main__":
     main()
