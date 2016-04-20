@@ -165,8 +165,9 @@ def main():
     opts = {x[0]:x[1] for x in opts}
     sys_id = int(opts['--sys'])
 
-    if sys_id not in range(1,7) or sys_id == 3:
-        print "System number has to be from 1 to 7. 3 is Lucene"
+    NO_EVAL_MODELS = [6,7]
+    if sys_id not in range(1,8) or sys_id in NO_EVAL_MODELS:
+        print "System number has to be from 1 to 7."
         sys.exit(-1)
 
     
