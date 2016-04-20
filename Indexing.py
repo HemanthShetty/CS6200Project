@@ -3,7 +3,7 @@ import io,json,os
 
 
 charactersToBeRemovedRegex=re.compile('[^a-zA-Z0-9-.,]')
-corpusDirectoryName='corpus'
+corpusDirectoryName='../data/cacm'
 vocabularySize=0
 unigramInvertedIndex={}
 unigramTokensCountMapping={}
@@ -46,12 +46,6 @@ def TokenizeArticleContent(textContent):
     return caseFoldedContent
 
 
-def formatPageName(pageName):
-    articleTitle=pageName[len("wiki/"):]
-    underScoresRemoved = articleTitle.replace("_", "")
-    formattedTitle=underScoresRemoved.replace("-","")
-    return formattedTitle.replace("/","")
-
 def updateUnigramIndexForDocument(documentTermFrequency,documentID,index):
     if index == 'uni':
         for term in documentTermFrequency:
@@ -66,7 +60,10 @@ def updateUnigramIndexForDocument(documentTermFrequency,documentID,index):
             else:
                 stemInvertedIndex[term]=[(documentID,documentTermFrequency[term])]
 
+
 def unigramIndexer(corpusDirectoryName):
+    print "Processing files from %s ..." % corpusDirectoryName
+
     for file in os.listdir(corpusDirectoryName):
         if file.endswith(".html"):
             with open(corpusDirectoryName+"/"+file) as corpusFile:
@@ -112,6 +109,8 @@ def unigramIndexer(corpusDirectoryName):
                     documentTermFrequency=generateIndexFromTokens(tokens,documentTermFrequency)
                     updateUnigramIndexForDocument(documentTermFrequency,count,'stem')
 
+    print "Storing index in file..."
+
     StoreIndex(unigramInvertedIndexFile,unigramInvertedIndex)
     StoreIndex(stemIndexFile,stemInvertedIndex)
 
@@ -136,8 +135,10 @@ def generateIndexFromTokens(tokens,documentTermFrequency):
 def main():
     unigramIndexer(corpusDirectoryName)
 
+    print "Done!"
 
-main()
 
+if __name__ == '__main__':
+    main()
 
 
