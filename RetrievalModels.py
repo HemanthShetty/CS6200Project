@@ -1,3 +1,14 @@
+"""
+SYSTEM NUMBERS
+1. BM25
+2. TFIDF
+3. Lucene (not implemented in this script
+4. Query expansion(pseudo relevance) + BM25
+5. Query expansion(synonyms) + BM25
+6. Query expansion(synonyms+stopping) + BM25
+7. Stemming + BM25
+"""
+
 import sys
 import getopt
 import json
@@ -22,16 +33,6 @@ avdl=0
 charactersToBeRemovedRegex=re.compile('[^a-zA-Z0-9-.,]')
 
 
-"""
-SYSTEM NUMBERS
-1. BM25
-2. TFIDF
-3. Lucene (not implemented in this script
-4. Query expansion(pseudo relevance) + BM25
-5. Query expansion(synonyms) + BM25
-6. Query expansion(synonyms+stopping) + BM25
-7. Stemming + BM25
-"""
 
 def get_term_TFIDF_score(documentFrequency,frequencyOfTermInDocument,docLength):
     termFrequencyWeight=float(frequencyOfTermInDocument)/float(docLength)
@@ -77,11 +78,13 @@ def calculateDocumentStatisticsFromIndex(unigramIndex):
 
 
 def writeDocumentScoresToFile(doc_score, queryID, fp):
-    sorted_docscore = sorted(doc_score.items(),key=operator.itemgetter(1),reverse=True)[:100]
+    sorted_docscore = sorted(doc_score.items(),
+                                key=operator.itemgetter(1),
+                                reverse=True)[:100]
     doc_rank=1
 
     for doc in sorted_docscore:
-        fp.write(str(queryID)+" "+"Q0 "+doc[0]+" "+str(doc_rank)+" "+str(doc[1])+" Hemanth"+"\n")
+        fp.write(str(queryID)+"Q0 "+doc[0]+" "+str(doc_rank)+" "+str(doc[1])+" Hemanth"+"\n")
         doc_rank+=1
 
 
@@ -153,7 +156,7 @@ def main():
 
         for queryEntry in queryEntries:
             query=queryEntry[1].rstrip()
-            queryID=queryEntry[0]
+            queryID=queryEntry[0].lstrip()
             queryTerms=tokenizeQuery(query)
             doc_score={}
 
