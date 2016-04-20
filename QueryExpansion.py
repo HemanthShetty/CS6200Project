@@ -2,10 +2,9 @@
 from PyDictionary import PyDictionary
 
 
-def DictExpandQuery(query):
+def DictExpandQuery(q_terms, k=5):
     dic = PyDictionary()
     
-    q_terms = query.split(' ')
     new_terms = []
 
     for term in q_terms:
@@ -16,15 +15,24 @@ def DictExpandQuery(query):
             w_found = False        
             
         if w_found:
-            synonyms = dic.synonym(term)
+            try:
+                synonyms = dic.synonym(term)
+            except:
+                continue 
+
+            if synonyms == None:
+                continue
+
+            if len(synonyms) > k:
+                synonyms = synonyms[:k]
             new_terms.extend(synonyms)
 
-    new_query_terms = query + ' ' + ' '.join(new_terms)
+    new_query_terms = q_terms + new_terms
 
     return new_query_terms
 
 if __name__ == '__main__':
     test_query = "global warming potential"
 
-    expanded_query = DictExpandQuery(test_query) 
+    expanded_query = DictExpandQuery(test_query.split(' '),k=2) 
     print expanded_query
