@@ -1,11 +1,12 @@
 __author__ = 'Anupam'
 
 
+COMMON_WORDS_FILE = "../data/common_words"
 
 def StopList(unigramIndex,queryTerms):
 
     stop_list = []
-    with open("common_words.txt", "r") as ins:
+    with open(COMMON_WORDS_FILE, "r") as ins:
         for line in ins:
             stop_list.append(line)
 
@@ -16,7 +17,7 @@ def StopList(unigramIndex,queryTerms):
         newQuery =remove_values_from_list(newQuery,word)
         newIndex = remove_key(newIndex,word)
 
-    return (newQuery,newIndex)
+    return (newIndex,newQuery)
 
 
 
