@@ -18,6 +18,7 @@ import operator
 
 from PseudoRelevanceRocchio import Rocchio
 from QueryExpansion import DictExpandQuery
+from Stopping import StopList
 
 
 UNIGRAM_INDEX_FILE = "unigramIndex.txt"
@@ -173,7 +174,7 @@ def main():
     queries = readQueries(sys_id) 
 
     for queryID,query in queries:
-        queryTerms=tokenizeQuery(query)
+        queryTerms = tokenizeQuery(query)
         doc_score={}
 
         if sys_id == 4:
@@ -181,6 +182,8 @@ def main():
             queryTerms = queryTerms
         elif sys_id == 5:
             queryTerms = DictExpandQuery(queryTerms)
+        elif sys_id == 6:
+            index, queryTerms = StopList(index, queryTerms) 
 
         distinctQueryTerms=list(set(queryTerms))
 
