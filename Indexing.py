@@ -8,6 +8,8 @@ vocabularySize=0
 unigramInvertedIndex={}
 unigramTokensCountMapping={}
 unigramInvertedIndexFile="unigramIndex.txt"
+stemIndexFile="stemIndex.txt"
+stemInvertedIndex={}
 totalNumberOfTokens=0
 documentTokenLength={}
 content_regex="<pre>(.*)</pre>"
@@ -50,12 +52,19 @@ def formatPageName(pageName):
     formattedTitle=underScoresRemoved.replace("-","")
     return formattedTitle.replace("/","")
 
-def updateUnigramIndexForDocument(documentTermFrequency,documentID):
-    for term in documentTermFrequency:
-        if unigramInvertedIndex.has_key(term):
-            unigramInvertedIndex[term].append((documentID,documentTermFrequency[term]))
-        else:
-            unigramInvertedIndex[term]=[(documentID,documentTermFrequency[term])]
+def updateUnigramIndexForDocument(documentTermFrequency,documentID,index):
+    if index == 'uni':
+        for term in documentTermFrequency:
+            if unigramInvertedIndex.has_key(term):
+                unigramInvertedIndex[term].append((documentID,documentTermFrequency[term]))
+            else:
+                unigramInvertedIndex[term]=[(documentID,documentTermFrequency[term])]
+    else:
+        for term in documentTermFrequency:
+            if stemInvertedIndex.has_key(term):
+                stemInvertedIndex[term].append((documentID,documentTermFrequency[term]))
+            else:
+                stemInvertedIndex[term]=[(documentID,documentTermFrequency[term])]
 
 def unigramIndexer(corpusDirectoryName):
     for file in os.listdir(corpusDirectoryName):
@@ -79,8 +88,32 @@ def unigramIndexer(corpusDirectoryName):
                         tokens=tokens+lineTokens
                 documentID=file.split('-')[1].replace(".html",'')
                 documentTermFrequency=generateIndexFromTokens(tokens,documentTermFrequency)
-                updateUnigramIndexForDocument(documentTermFrequency,documentID)
+                updateUnigramIndexForDocument(documentTermFrequency,documentID,'uni')
+        if file.endswith(".txt"):
+            with open(corpusDirectoryName+"/"+file) as corpusFile:
+
+                pageContent=corpusFile.read()
+                documentText = pageContent.split("#")
+                documentText.pop(0)
+                count =0
+                for fileText in documentText:
+                    documentTermFrequency={}
+                    tokens=[]
+                    count +=1
+                    text=str(count)
+                    fileText=fileText.split(text+'\n',1)[-1]
+                    content=TokenizeArticleContent(fileText)
+                    textContent = content.split('\n')
+                    for line in textContent:
+                        textLine=line.strip('\n')
+                        lineTokens=textLine.split()
+                        if lineTokens:
+                            tokens=tokens+lineTokens
+                    documentTermFrequency=generateIndexFromTokens(tokens,documentTermFrequency)
+                    updateUnigramIndexForDocument(documentTermFrequency,count,'stem')
+
     StoreIndex(unigramInvertedIndexFile,unigramInvertedIndex)
+    StoreIndex(stemIndexFile,stemInvertedIndex)
 
 
 def StoreIndex(fileName,filedata):
