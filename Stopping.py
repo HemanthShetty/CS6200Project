@@ -8,7 +8,7 @@ def StopList(unigramIndex,queryTerms):
     stop_list = []
     with open(COMMON_WORDS_FILE, "r") as ins:
         for line in ins:
-            stop_list.append(line)
+            stop_list.append(line.rstrip())
 
     newIndex = dict(unigramIndex)
     newQuery = list(queryTerms)
@@ -19,7 +19,16 @@ def StopList(unigramIndex,queryTerms):
 
     return (newIndex,newQuery)
 
+def isStopWord(word):
 
+    stop_list = []
+    with open(COMMON_WORDS_FILE, "r") as ins:
+        for line in ins:
+            stop_list.append(line.rstrip())
+    if word in stop_list:
+        return True
+
+    return  False
 
 def remove_values_from_list(the_list, val):
    return [value for value in the_list if value != val]

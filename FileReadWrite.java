@@ -13,7 +13,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 
 public class FileReadWrite {
-	static String results = "E:\\Users\\Crawler\\Results\\result.txt";
+	static String results = "result.txt";
 	
 	static public String[] getQuery(String path) throws FileNotFoundException{
 		File fin = new File(path);
@@ -46,13 +46,7 @@ public class FileReadWrite {
 		}
 		File resultsfile = new File(results);
 		try{
-			if(!resultsfile.getParentFile().exists())
-			{
-				if (!resultsfile.getParentFile().mkdirs())
-					throw new IOException("Unable to create " + resultsfile.getParentFile());
-			}
 			BufferedWriter out = new BufferedWriter(new FileWriter(resultsfile,false));
-			
 		}catch(IOException i){
 				i.printStackTrace();
 			}
@@ -62,13 +56,7 @@ public class FileReadWrite {
 	static public void writeResult(ScoreDoc[] hits,int qid,IndexSearcher searcher){
 		File resultsfile = new File(results);
 		try{
-			if(!resultsfile.getParentFile().exists())
-			{
-				if (!resultsfile.getParentFile().mkdirs())
-					throw new IOException("Unable to create " + resultsfile.getParentFile());
-			}
 			BufferedWriter out3 = new BufferedWriter(new FileWriter(resultsfile,true));
-			out3.append("<Result>");
 			for (int i = 0; i < hits.length; ++i) {
 				out3.newLine();
 				out3.append(String.valueOf(qid));
@@ -77,16 +65,18 @@ public class FileReadWrite {
 				out3.append(" ");
 				int docId = hits[i].doc;
 				Document d = searcher.doc(docId);
-				out3.append(d.get("path"));
+				String dpath = d.get("path");
+				String[] paths =dpath.split("\\\\");
+				dpath = paths[paths.length-1];
+				dpath = (dpath.split("\\."))[0];
+				out3.append(dpath);
 				out3.append(" ");
 				out3.append(String.valueOf(i+1));
 				out3.append(" ");
 				out3.append(String.valueOf(hits[i].score));
 				out3.append(" ");
-				out3.append("SYS");
+				out3.append("SYS-3");
 			}
-			out3.newLine();
-			out3.append("</Result>");
 			out3.newLine();
 			out3.close();
 		}

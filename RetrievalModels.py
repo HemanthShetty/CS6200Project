@@ -16,7 +16,7 @@ import re
 import math
 import operator
 
-from PseudoRelevanceRocchio import Rocchio
+from PseudoRelevanceRocchio import tfIdfPRF
 from QueryExpansion import DictExpandQuery
 from Stopping import StopList
 
@@ -178,8 +178,8 @@ def main():
         doc_score={}
 
         if sys_id == 4:
-            # TODO pseudo relevance
-            queryTerms = queryTerms
+            score= calculateScore(list(set(queryTerms)),index,queryTerms)
+            queryTerms=tfIdfPRF(score,index,queryTerms)
         elif sys_id == 5:
             queryTerms = DictExpandQuery(queryTerms)
         elif sys_id == 6:
@@ -219,6 +219,29 @@ def main():
 
     outputFile.close()    
 
+
+def calculateScore(distinctQueryTerms,index,queryTerms):
+    doc_score={}
+    for queryTerm in distinctQueryTerms:
+        if index.has_key(queryTerm):
+            invertedList=index[queryTerm]
+            documentFrequency=len(invertedList)
+            queryFrequency=queryTerms.count(queryTerm)
+
+            for entry in invertedList:
+                docID=entry[0]
+                docName="CACM-"+str(docID)
+                docLength=docTokenCountMapping[docID]
+                frequencyOfTermInDocument=entry[1]
+                termScore=get_term_BM25_score(documentFrequency,
+                                                        frequencyOfTermInDocument,
+                                                        queryFrequency,
+                                                        docLength)
+                if doc_score.has_key(docName):
+                    doc_score[docName]=doc_score[docName]+termScore
+                else:
+                    doc_score[docName]=termScore
+    return doc_score
 
 if __name__ == "__main__":
     main()

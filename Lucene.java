@@ -41,44 +41,11 @@ public class Lucene {
     private ArrayList<File> queue = new ArrayList<File>();
 
     public static void main(String[] args) throws IOException {
-	System.out
-		.println("Enter the FULL path where the index will be created: (e.g. /Usr/index or c:\\temp\\index)");
 
-	String indexLocation = null;
-	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-	String s = br.readLine();
-
-	Lucene indexer = null;
-	try {
-	    indexLocation = s;
-	    indexer = new Lucene(s);
-	} catch (Exception ex) {
-	    System.out.println("Cannot create index..." + ex.getMessage());
-	    System.exit(-1);
-	}
-
-	// ===================================================
-	// read input from user until he enters q for quit
-	// ===================================================
-	while (!s.equalsIgnoreCase("q")) {
-	    try {
-		System.out
-			.println("Enter the FULL path to add into the index (q=quit): (e.g. /home/mydir/docs or c:\\Users\\mydir\\docs)");
-		System.out
-			.println("[Acceptable file types: .xml, .html, .html, .txt]");
-		s = br.readLine();
-		if (s.equalsIgnoreCase("q")) {
-		    break;
-		}
-
-		// try to add file into the index
-		indexer.indexFileOrDirectory(s);
-	    } catch (Exception e) {
-		System.out.println("Error indexing " + s + " : "
-			+ e.getMessage());
-	    }
-	}
-
+	String indexLocation = "E:\\Users\\Anupam\\workspace\\Lucene\\Luceneindex";
+	String dataLocation="E:\\Users\\Anupam\\workspace\\Lucene\\data";
+	Lucene indexer = new Lucene(indexLocation);
+	indexer.indexFileOrDirectory(dataLocation);
 	// ===================================================
 	// after adding, we always have to call the
 	// closeIndex, otherwise the index is not created
@@ -89,18 +56,8 @@ public class Lucene {
 	// Now search
 	// =========================================================
 	String[] query = null;
-	s="";
-	while (!s.equalsIgnoreCase("q")) {
-		System.out.println("Enter the search query file path (q=quit)");
-		s= br.readLine();
-		try{
-			query = FileReadWrite.getQuery(s);
-		}catch(FileNotFoundException f){
-			if(!s.equalsIgnoreCase("q")){
-				System.out.println("File not found at location please enter valid path");
-			}
-		}
-	}
+	String s="";
+	query = FileReadWrite.getQuery("cacm.txt");
 	int qid=0;
 	if(query!=null){
 		for(String que:query){
@@ -126,33 +83,12 @@ public class Lucene {
 				ScoreDoc[] hits = collector.topDocs(0, 1000).scoreDocs;
 
 				FileReadWrite.writeResult(hits, qid, searcher);
-				// 4. display results
-				//System.out.println("Found " + hits.length + " hits.");
-				/*for (int i = 0; i < hits.length; ++i) {
-				System.out.println("");
-				System.out.print(qid);
-				System.out.print(" ");
-				System.out.print("Q0");
-				System.out.print(" ");
-				int docId = hits[i].doc;
-				Document d = searcher.doc(docId);
-				System.out.print(d.get("path"));
-				System.out.print(" ");
-				System.out.print(i+1);
-				System.out.print(" ");
-				System.out.print(hits[i].score);
-				System.out.print(" ");
-				System.out.print("SYS");
-				System.out.println((i + 1) + ". " + d.get("path")
-						+ " score=" + hits[i].score);
-			}*/
-				// 5. term stats --> watch out for which "version" of the term
-				// must be checked here instead!
+
 				Term termInstance = new Term("contents", s);
 				long termFreq = reader.totalTermFreq(termInstance);
 				long docCount = reader.docFreq(termInstance);
-				System.out.println(s + " Term Frequency " + termFreq
-						+ " - Document Frequency " + docCount);
+				/*System.out.println(s + " Term Frequency " + termFreq
+						+ " - Document Frequency " + docCount);*/
 
 			} catch (Exception e) {
 				System.out.println("Error searching " + s + " : "
