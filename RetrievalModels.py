@@ -180,7 +180,7 @@ def main():
         doc_score={}
 
         if sys_id == 4:
-            score= calculateScore(list(set(queryTerms)),index,queryTerms)
+            score= calculateScore(list(set(queryTerms)),index,queryTerms,queryID)
             queryTerms=tfIdfPRF(score,index,queryTerms)
         elif sys_id == 5:
             queryTerms = DictExpandQuery(queryTerms)
@@ -231,13 +231,22 @@ def main():
     outputFile.close()    
 
 
-def calculateScore(distinctQueryTerms,index,queryTerms):
+def calculateScore(distinctQueryTerms,index,queryTerms,queryID):
     doc_score={}
+    eval_results = readQueryDocumentsRanking(QUERY_DOCUMENTS_FILE)
+    queryRelevantDocuments=eval_results[int(queryID)]
+    totalNumberOfRelDocs=len(queryRelevantDocuments)
     for queryTerm in distinctQueryTerms:
         if index.has_key(queryTerm):
             invertedList=index[queryTerm]
             documentFrequency=len(invertedList)
             queryFrequency=queryTerms.count(queryTerm)
+            relevantDocsWithQueryTerm=0
+            for entry in invertedList:
+                docID=entry[0]
+                docName="CACM-"+str(docID)
+                if docName in queryRelevantDocuments:
+                    relevantDocsWithQueryTerm=relevantDocsWithQueryTerm+1
 
             for entry in invertedList:
                 docID=entry[0]
@@ -247,7 +256,9 @@ def calculateScore(distinctQueryTerms,index,queryTerms):
                 termScore=get_term_BM25_score(documentFrequency,
                                                         frequencyOfTermInDocument,
                                                         queryFrequency,
-                                                        docLength)
+                                                        docLength,
+                                                        relevantDocsWithQueryTerm,
+                                                        totalNumberOfRelDocs)
                 if doc_score.has_key(docName):
                     doc_score[docName]=doc_score[docName]+termScore
                 else:
