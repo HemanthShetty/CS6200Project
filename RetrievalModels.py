@@ -19,12 +19,14 @@ import operator
 from PseudoRelevanceRocchio import tfIdfPRF
 from QueryExpansion import DictExpandQuery
 from Stopping import StopList
+from Evaluation import readQueryDocumentsRanking
 
 
 UNIGRAM_INDEX_FILE = "unigramIndex.txt"
 UNIGRAM_STEM_INDEX_FILE = "stemIndex.txt"
 QUERY_FILE = "CACM_QUERY.txt"
 QUERY_STEM_FILE = "../data/cacm_stem.query.txt"
+QUERY_DOCUMENTS_FILE="../data/cacm.rel"
 
 
 "less than 1000 because document names overlap after removing - and _ and these files have same content"
@@ -42,7 +44,7 @@ def get_term_TFIDF_score(documentFrequency,frequencyOfTermInDocument,docLength):
     return score
 
 
-def get_term_BM25_score(ni,fi,qfi,dl):
+def get_term_BM25_score(ni,fi,qfi,dl,ri,R):
     k1=1.2
     b=0.75
     k2=100
@@ -51,7 +53,7 @@ def get_term_BM25_score(ni,fi,qfi,dl):
         score=0.0
     else:
         K=k1*((1-b)+b*float(dl)/float(avdl))
-        comp1=float(N-ni+0.5)/float(ni+0.5)
+        comp1=(float(N-ni-R+ri+0.5)/float(ni-ri+0.5))*(float(ri+0.5)/float(R-ri+0.5))
         comp2=float((k1+1)*fi)/float(K+fi)
         comp3=float((k2+1)*qfi)/float(k2+qfi)
         score=math.log(comp1)*comp2*comp3
@@ -186,11 +188,20 @@ def main():
             index, queryTerms = StopList(index, queryTerms) 
 
         distinctQueryTerms=list(set(queryTerms))
-
+        eval_results = readQueryDocumentsRanking(QUERY_DOCUMENTS_FILE)
+        queryRelevantDocuments=eval_results[int(queryID)]
+        totalNumberOfRelDocs=len(queryRelevantDocuments)
         for queryTerm in distinctQueryTerms:
             if index.has_key(queryTerm):
                 invertedList=index[queryTerm]
                 documentFrequency=len(invertedList)
+                relevantDocsWithQueryTerm=0
+                for entry in invertedList:
+                    docID=entry[0]
+                    docName="CACM-"+str(docID)
+                    if docName in queryRelevantDocuments:
+                        relevantDocsWithQueryTerm=relevantDocsWithQueryTerm+1
+
                 queryFrequency=queryTerms.count(queryTerm)
 
                 for entry in invertedList:
@@ -203,7 +214,7 @@ def main():
                         termScore=get_term_BM25_score(documentFrequency,
                                                         frequencyOfTermInDocument,
                                                         queryFrequency,
-                                                        docLength)
+                                                        docLength,relevantDocsWithQueryTerm,totalNumberOfRelDocs)
                     else:
                         termScore=get_term_TFIDF_score(documentFrequency,
                                                         frequencyOfTermInDocument,
