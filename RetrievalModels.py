@@ -262,7 +262,7 @@ def main():
                                                         frequencyOfTermInDocument,
                                                         queryFrequency,
                                                         docLength,relevantDocsWithQueryTerm,totalNumberOfRelDocs)
-                    elif sys_id==7:
+                    elif sys_id==7 and sys_id!=7:
                         termScore=get_term_BM25_score(documentFrequency,
                                                         frequencyOfTermInDocument,
                                                         queryFrequency,

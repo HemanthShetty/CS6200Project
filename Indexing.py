@@ -104,6 +104,7 @@ def unigramIndexer(corpusDirectoryName):
                     for line in textContent:
                         textLine=line.strip('\n')
                         lineTokens=textLine.split()
+                        lineTokens = [x for x in lineTokens if x.isdigit() is False]
                         if lineTokens:
                             tokens=tokens+lineTokens
                     documentTermFrequency=generateIndexFromTokens(tokens,documentTermFrequency)
