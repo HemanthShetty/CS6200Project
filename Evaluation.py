@@ -168,16 +168,25 @@ def calcMeanRR(query_relevant_docs, query_results):
     return mean_RR
 
 
-def expPrecisionRecallTables(precision, recall, sys_id):
+def expPrecisionRecallTables(precision, recall, sys_id, results):
     
-    filename = "model%d_precision_recall_talbles.txt" % sys_id
+    filename = "model%d_precision_recall_tables.csv" % sys_id
     fp = open(filename, 'w')
+
+    fp.write("\"Query ID\", \"Doc ID\", \"Ranking\", \"Precision\", \"Recall\"\n")
 
     query_ids = precision.keys()
     for q_id in query_ids:
-        fp.write("Query %d:\n" % q_id)
-        fp.write("Precision: %s\n" % str(map(prettyfloat,precision[q_id])))
-        fp.write("Recall: %s\n\n" % str(map(prettyfloat,recall[q_id])))
+        docs = results[q_id]
+        for i,d in enumerate(docs): 
+            fp.write(','.join([str(q_id), d, str(i+1),
+                                "%.3f" % precision[q_id][i], 
+                                "%.3f" % recall[q_id][i]]))
+            fp.write("\n")
+
+        #fp.write("Query %d:\n" % q_id)
+        #fp.write("Precision: %s\n" % str(map(prettyfloat,precision[q_id])))
+        #fp.write("Recall: %s\n\n" % str(map(prettyfloat,recall[q_id])))
 
     fp.close()
 
@@ -219,8 +228,8 @@ def main():
     precision = calcPrecision(eval_results, sys_results)
     recall = calcRecall(eval_results, sys_results)
     
+    expPrecisionRecallTables(precision, recall, sys_id, sys_results)
 
-    expPrecisionRecallTables(precision, recall, sys_id)
 
 if __name__ == '__main__':
     main()
