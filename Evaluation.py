@@ -12,6 +12,7 @@ SYSTEM NUMBERS
 
 import getopt
 import sys
+import os
 from collections import defaultdict
 
 SYSTEM_OPTIONS = ["","System 1: BM25", "System 2: Tf-idf",
@@ -21,6 +22,8 @@ SYSTEM_OPTIONS = ["","System 1: BM25", "System 2: Tf-idf",
                     "System 7: BM25 + stemming"]
 
 QUERY_DOCUMENTS_FILE = "../data/cacm.rel"
+
+OUTPUT_DIR = "output"
 
 
 class prettyfloat(float):
@@ -170,7 +173,8 @@ def calcMeanRR(query_relevant_docs, query_results):
 
 def expPrecisionRecallTables(precision, recall, sys_id, results):
     
-    filename = "model%d_precision_recall_tables.csv" % sys_id
+    filename = os.path.join(OUTPUT_DIR, 
+                            "model%d_precision_recall_tables.csv" % sys_id)
     fp = open(filename, 'w')
 
     fp.write("\"Query ID\", \"Doc ID\", \"Ranking\", \"Precision\", \"Recall\"\n")
