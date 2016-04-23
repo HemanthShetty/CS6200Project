@@ -257,12 +257,12 @@ def main():
                     docLength=docTokenCountMapping[docID]
                     frequencyOfTermInDocument=entry[1]
 
-                    if sys_id != 2:
+                    if sys_id != 2 and sys_id!=7:
                         termScore=get_term_BM25_score(documentFrequency,
                                                         frequencyOfTermInDocument,
                                                         queryFrequency,
                                                         docLength,relevantDocsWithQueryTerm,totalNumberOfRelDocs)
-                    elif sys_id==7 and sys_id!=7:
+                    elif sys_id==7:
                         termScore=get_term_BM25_score(documentFrequency,
                                                         frequencyOfTermInDocument,
                                                         queryFrequency,
