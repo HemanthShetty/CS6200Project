@@ -1,7 +1,24 @@
+"""
+SYSTEM NUMBERS
+1. BM25
+2. TFIDF
+3. Lucene (not implemented in this script
+4. Query expansion(pseudo relevance) + BM25
+5. Query expansion(synonyms) + BM25
+6. BM25 + stopping
+7. BM25 + stemming
+"""
+
 
 import getopt
 import sys
 from collections import defaultdict
+
+SYSTEM_OPTIONS = ["","System 1: BM25", "System 2: Tf-idf",
+                    "", "System 4: BM25 + query expansion-pseudo relevance",
+                    "System 5: BM25 + query expansion: synonyms",
+                    "System 6: BM25 + stopping",
+                    "System 7: BM25 + stemming"]
 
 QUERY_DOCUMENTS_FILE = "../data/cacm.rel"
 
@@ -26,7 +43,6 @@ def readQueryDocumentsRanking(filename):
     return query_document
 
 def calcQueryPrecision(relevant_docs, docs):
-     
     precision_docs = []
     docs_found = 0
     
@@ -37,13 +53,26 @@ def calcQueryPrecision(relevant_docs, docs):
         p = float(docs_found) / n
         precision_docs.append(p)
 
+    return precision_docs
+
+
+def calcMeanQueryPrecision(relevant_docs, docs):
+    precision_docs = []
+    docs_found = 0
+    
+    for n,d in enumerate(docs,start=1):
+        if d in relevant_docs:
+            docs_found += 1
+
+            p = float(docs_found) / n
+            precision_docs.append(p)
+
     avg_precision = sum(precision_docs) / len(precision_docs)
 
-    return avg_precision, precision_docs
+    return avg_precision
 
 
 def calcQueryRecall(relevant_docs, docs):
-     
     recall_docs = []
     docs_found = 0
     n_docs = len(relevant_docs)
@@ -55,9 +84,7 @@ def calcQueryRecall(relevant_docs, docs):
         r = float(docs_found) / n_docs
         recall_docs.append(r)
 
-    avg_recall = sum(recall_docs) / len(recall_docs)
-
-    return avg_recall, recall_docs
+    return recall_docs
 
 
 def calcMeanAvgPrecision(query_relevant_docs, query_results):
@@ -67,7 +94,7 @@ def calcMeanAvgPrecision(query_relevant_docs, query_results):
     # evaluate for every query and relevant documents
     for q_id,relevant_docs in query_relevant_docs.items():
         query_docs = query_results[q_id]
-        avg_p,_ = calcQueryPrecision(relevant_docs, query_docs) 
+        avg_p = calcMeanQueryPrecision(relevant_docs, query_docs) 
 
         avg_queries_precision.append(avg_p)
 
@@ -82,7 +109,7 @@ def calcPrecisionAtK(query_relevant_docs, query_results, k):
     # evaluate for every query and relevant documents
     for q_id,relevant_docs in query_relevant_docs.items():
         query_docs = query_results[q_id]
-        _,p = calcQueryPrecision(relevant_docs, query_docs)
+        p = calcQueryPrecision(relevant_docs, query_docs)
 
         precision.append(p[k-1])
 
@@ -97,7 +124,7 @@ def calcPrecision(query_relevant_docs, query_results):
     # evaluate for every query and relevant documents
     for q_id,relevant_docs in query_relevant_docs.items():
         query_docs = query_results[q_id]
-        _,p = calcQueryPrecision(relevant_docs, query_docs)
+        p = calcQueryPrecision(relevant_docs, query_docs)
 
         precision[q_id] = p
 
@@ -109,7 +136,7 @@ def calcRecall(query_relevant_docs, query_results):
     # evaluate for every query and relevant documents
     for q_id,relevant_docs in query_relevant_docs.items():
         query_docs = query_results[q_id]
-        _,r = calcQueryRecall(relevant_docs, query_docs)
+        r = calcQueryRecall(relevant_docs, query_docs)
 
         recall[q_id] = r
 
@@ -165,12 +192,13 @@ def main():
     opts = {x[0]:x[1] for x in opts}
     sys_id = int(opts['--sys'])
 
-    NO_EVAL_MODELS = [6,7]
+    NO_EVAL_MODELS = [7]
     if sys_id not in range(1,8) or sys_id in NO_EVAL_MODELS:
         print "System number has to be from 1 to 7."
         sys.exit(-1)
 
-    
+    print SYSTEM_OPTIONS[sys_id]
+
     sys_filename = "model%d_queries_results.txt" % sys_id 
 
     sys_results = readQueryDocumentsRanking(sys_filename)
