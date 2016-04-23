@@ -1,6 +1,7 @@
 
 from PyDictionary import PyDictionary
 
+from Stopping import isStopWord
 
 def DictExpandQuery(q_terms, k=5):
     dic = PyDictionary()
@@ -8,12 +9,17 @@ def DictExpandQuery(q_terms, k=5):
     new_terms = []
 
     for term in q_terms:
+        if isStopWord(term):
+            continue
+
+        # check if word exists in the dictionary
         w_found = True
         try:
             dic.meaning(term)
         except:
             w_found = False        
             
+        # get k first synonyms
         if w_found:
             try:
                 synonyms = dic.synonym(term)
