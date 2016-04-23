@@ -22,6 +22,12 @@ from Stopping import StopList
 from Evaluation import readQueryDocumentsRanking
 
 
+SYSTEM_OPTIONS = ["","System 1: BM25", "System 2: Tf-idf",
+                    "", "System 4: BM25 + query expansion-pseudo relevance",
+                    "System 5: BM25 + query expansion: synonyms",
+                    "System 6: BM25 + stopping",
+                    "System 7: BM25 + stemming"]
+
 UNIGRAM_INDEX_FILE = "unigramIndex.txt"
 UNIGRAM_STEM_INDEX_FILE = "stemIndex.txt"
 QUERY_FILE = "CACM_QUERY.txt"
@@ -92,7 +98,6 @@ def writeDocumentScoresToFile(doc_score, queryID, fp):
         doc_rank+=1
 
 
-
 def tokenizeQuery(query):
     textContent = re.sub("\.\.\."," ", query)
     textContent = re.sub(charactersToBeRemovedRegex," ", textContent)
@@ -150,6 +155,41 @@ def readQueries(sys_id):
     return queries
 
 
+def calculateScore(distinctQueryTerms,index,queryTerms,queryID):
+    doc_score={}
+    eval_results = readQueryDocumentsRanking(QUERY_DOCUMENTS_FILE)
+    queryRelevantDocuments=eval_results[int(queryID)]
+    totalNumberOfRelDocs=len(queryRelevantDocuments)
+    for queryTerm in distinctQueryTerms:
+        if index.has_key(queryTerm):
+            invertedList=index[queryTerm]
+            documentFrequency=len(invertedList)
+            queryFrequency=queryTerms.count(queryTerm)
+            relevantDocsWithQueryTerm=0
+            for entry in invertedList:
+                docID=entry[0]
+                docName="CACM-"+str(docID)
+                if docName in queryRelevantDocuments:
+                    relevantDocsWithQueryTerm=relevantDocsWithQueryTerm+1
+
+            for entry in invertedList:
+                docID=entry[0]
+                docName="CACM-"+str(docID)
+                docLength=docTokenCountMapping[docID]
+                frequencyOfTermInDocument=entry[1]
+                termScore=get_term_BM25_score(documentFrequency,
+                                                        frequencyOfTermInDocument,
+                                                        queryFrequency,
+                                                        docLength,
+                                                        relevantDocsWithQueryTerm,
+                                                        totalNumberOfRelDocs)
+                if doc_score.has_key(docName):
+                    doc_score[docName]=doc_score[docName]+termScore
+                else:
+                    doc_score[docName]=termScore
+    return doc_score
+
+
 def main():
 
     try:
@@ -165,6 +205,8 @@ def main():
         print "System number has to be from 1 to 7. 3 is Lucene"
         sys.exit(-1)
 
+    print SYSTEM_OPTIONS[sys_id]
+
     index = readIndex(sys_id)
 
     "Calculate the total number of documents in the index and the average document length"
@@ -179,11 +221,14 @@ def main():
         queryTerms = tokenizeQuery(query)
         doc_score={}
 
+        # Query expansion - pseudo relevance
         if sys_id == 4:
             score= calculateScore(list(set(queryTerms)),index,queryTerms,queryID)
             queryTerms=tfIdfPRF(score,index,queryTerms)
+        # Query expansion - Synonyms
         elif sys_id == 5:
-            queryTerms = DictExpandQuery(queryTerms)
+            # 3 synonyms per word found in dictionary
+            queryTerms = DictExpandQuery(queryTerms,3)
         elif sys_id == 6:
             index, queryTerms = StopList(index, queryTerms) 
 
@@ -191,11 +236,13 @@ def main():
         eval_results = readQueryDocumentsRanking(QUERY_DOCUMENTS_FILE)
         queryRelevantDocuments=eval_results[int(queryID)]
         totalNumberOfRelDocs=len(queryRelevantDocuments)
+
         for queryTerm in distinctQueryTerms:
             if index.has_key(queryTerm):
                 invertedList=index[queryTerm]
                 documentFrequency=len(invertedList)
                 relevantDocsWithQueryTerm=0
+
                 for entry in invertedList:
                     docID=entry[0]
                     docName="CACM-"+str(docID)
@@ -235,40 +282,6 @@ def main():
 
     outputFile.close()    
 
-
-def calculateScore(distinctQueryTerms,index,queryTerms,queryID):
-    doc_score={}
-    eval_results = readQueryDocumentsRanking(QUERY_DOCUMENTS_FILE)
-    queryRelevantDocuments=eval_results[int(queryID)]
-    totalNumberOfRelDocs=len(queryRelevantDocuments)
-    for queryTerm in distinctQueryTerms:
-        if index.has_key(queryTerm):
-            invertedList=index[queryTerm]
-            documentFrequency=len(invertedList)
-            queryFrequency=queryTerms.count(queryTerm)
-            relevantDocsWithQueryTerm=0
-            for entry in invertedList:
-                docID=entry[0]
-                docName="CACM-"+str(docID)
-                if docName in queryRelevantDocuments:
-                    relevantDocsWithQueryTerm=relevantDocsWithQueryTerm+1
-
-            for entry in invertedList:
-                docID=entry[0]
-                docName="CACM-"+str(docID)
-                docLength=docTokenCountMapping[docID]
-                frequencyOfTermInDocument=entry[1]
-                termScore=get_term_BM25_score(documentFrequency,
-                                                        frequencyOfTermInDocument,
-                                                        queryFrequency,
-                                                        docLength,
-                                                        relevantDocsWithQueryTerm,
-                                                        totalNumberOfRelDocs)
-                if doc_score.has_key(docName):
-                    doc_score[docName]=doc_score[docName]+termScore
-                else:
-                    doc_score[docName]=termScore
-    return doc_score
 
 if __name__ == "__main__":
     main()
