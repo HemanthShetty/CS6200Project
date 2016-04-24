@@ -42,8 +42,11 @@ public class Lucene {
 
     public static void main(String[] args) throws IOException {
 
-	String indexLocation = "E:\\Users\\Anupam\\workspace\\Lucene\\Luceneindex";
-	String dataLocation="E:\\Users\\Anupam\\workspace\\Lucene\\data";
+    	
+	String indexLocation= args[0] ; // E:\\Lucene\\Luceneindex;
+	String dataLocation=args[1]  ;//E:\\NEU SUBJECTS\\IR_Project\\data\\cacm
+	String queryFile=args[2];  //"CACM_QUERY.txt"
+	String resultFile=args[3]; // "E:\NEU SUBJECTS\IR_Project\CS6200Project\model3_queries_results.txt" 
 	Lucene indexer = new Lucene(indexLocation);
 	indexer.indexFileOrDirectory(dataLocation);
 	// ===================================================
@@ -57,44 +60,34 @@ public class Lucene {
 	// =========================================================
 	String[] query = null;
 	String s="";
-	query = FileReadWrite.getQuery("cacm.txt");
+	query = FileReadWrite.getQuery(queryFile,resultFile);
 	int qid=0;
 	if(query!=null){
 		for(String que:query){
-			//while (!s.equalsIgnoreCase("q")) {
 			try {
 				IndexReader reader = DirectoryReader.open(FSDirectory.open(new File(
 						indexLocation)));
 				IndexSearcher searcher = new IndexSearcher(reader);
 				TopScoreDocCollector collector = TopScoreDocCollector.create(100, true);
 				qid++;
-				//System.out.println("Enter the search query (q=quit):");
 				s = que;
-				/*	if (s.equalsIgnoreCase("q")) {
-		    break;
-		}*/
-
 
 				Query q = new QueryParser(Version.LUCENE_47, "contents",
-						sAnalyzer).parse(QueryParser.escape(s));
+						analyzer).parse(QueryParser.escape(s));
 				searcher.search(q, collector);
 				int hit = collector.getTotalHits();
-				//System.out.println(hit);
 				ScoreDoc[] hits = collector.topDocs(0, 1000).scoreDocs;
 
-				FileReadWrite.writeResult(hits, qid, searcher);
+				FileReadWrite.writeResult(hits, qid, searcher,resultFile);
 
 				Term termInstance = new Term("contents", s);
 				long termFreq = reader.totalTermFreq(termInstance);
 				long docCount = reader.docFreq(termInstance);
-				/*System.out.println(s + " Term Frequency " + termFreq
-						+ " - Document Frequency " + docCount);*/
 
 			} catch (Exception e) {
 				System.out.println("Error searching " + s + " : "
 						+ e.getMessage());
 				e.printStackTrace();
-				//break;
 			}
 
 		}

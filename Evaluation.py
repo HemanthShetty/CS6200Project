@@ -70,7 +70,10 @@ def calcMeanQueryPrecision(relevant_docs, docs):
             p = float(docs_found) / n
             precision_docs.append(p)
 
-    avg_precision = sum(precision_docs) / len(precision_docs)
+    if len(precision_docs) > 0:
+        avg_precision = sum(precision_docs) / len(precision_docs)
+    else:
+        avg_precision = 0
 
     return avg_precision
 

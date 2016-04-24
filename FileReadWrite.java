@@ -13,9 +13,9 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 
 public class FileReadWrite {
-	static String results = "result.txt";
 	
-	static public String[] getQuery(String path) throws FileNotFoundException{
+	//Reads Query and converts it to a lost of queries
+	static public String[] getQuery(String path,String fileName) throws FileNotFoundException{
 		File fin = new File(path);
 		StringBuilder filehtmltext= new StringBuilder();
 		//Read file line by line
@@ -44,21 +44,27 @@ public class FileReadWrite {
 			}
 			count++;
 		}
-		File resultsfile = new File(results);
+		File resultsfile = new File(fileName);
 		try{
+			if(!resultsfile.getParentFile().exists())
+			{
+				if (!resultsfile.getParentFile().mkdirs())
+					throw new IOException("Unable to create " + resultsfile.getParentFile());
+			}
+
 			BufferedWriter out = new BufferedWriter(new FileWriter(resultsfile,false));
 		}catch(IOException i){
 				i.printStackTrace();
-			}
+		}
 		return newquery;
 	}
 	
-	static public void writeResult(ScoreDoc[] hits,int qid,IndexSearcher searcher){
-		File resultsfile = new File(results);
+	//Writes results to file 
+	static public void writeResult(ScoreDoc[] hits,int qid,IndexSearcher searcher,String fileName){
+		File resultsfile = new File(fileName);
 		try{
 			BufferedWriter out3 = new BufferedWriter(new FileWriter(resultsfile,true));
 			for (int i = 0; i < hits.length; ++i) {
-				out3.newLine();
 				out3.append(String.valueOf(qid));
 				out3.append(" ");
 				out3.append("Q0");
@@ -75,9 +81,9 @@ public class FileReadWrite {
 				out3.append(" ");
 				out3.append(String.valueOf(hits[i].score));
 				out3.append(" ");
-				out3.append("SYS-3");
+				out3.append("hag");
+				out3.newLine();
 			}
-			out3.newLine();
 			out3.close();
 		}
 		catch(IOException i){

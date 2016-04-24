@@ -16,9 +16,23 @@ SYSTEM NUMBERS
 Model 3 uses Lucene and is implemented in Java.
 Models 1,2,4,5,6,7 are implemented in Python, using a sequence of commands for the steps
 
-#TODO
-instructions for lucene
+*****
+Lucene
+Dependencies:
+lucene-queryparser-4.7.2.jar
+lucene-core-4.7.2.jar
+lucene-analyzers-common-4.7.2.jar
 
+1)FileReadWrite.java - Would be used to read CACM_Query.txt present in the same folder
+
+2)Lucene.java - following 4 system arguments are accepted
+Note: Actual paths will be needed for these four arguments:
+ - indexLocation - Location of Lucene index files to be generated. Example:  E:\\Lucene\\Luceneindex
+ - dataLocation - Location of data files, they are placed in ../data/cacm folder  : E:\\NEUSUBJECTS\\IR_Project\\data\\cacm
+ - queryFile- Location of CACM query Text file , It will be inside the CS6200 folder with Python files Example: E:\\NEUSUBJECTS\\IR_Project\\CS6200Project\\CACM_QUERY.TXT 
+ - resultFile - This Location will be the output file location.The folder should be same as queryFile Example : E:\\NEUSUBJECTS\\IR_Project\\CS6200Project\\model3_queries_results.txt
+
+After this is run please run Evaluation.py with --sys=3 to get query by query results in excel  
 
 ******
 Python programs
