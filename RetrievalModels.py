@@ -26,7 +26,7 @@ SYSTEM_OPTIONS = ["","System 1: BM25", "System 2: Tf-idf",
                     "", "System 4: BM25 + query expansion-pseudo relevance",
                     "System 5: BM25 + query expansion: synonyms",
                     "System 6: BM25 + stopping",
-                    "System 7: BM25 + stemming"]
+                    "System 7: BM25 + stemming","System 8:BM25+QueryExpansion+stopping"]
 
 UNIGRAM_INDEX_FILE = "unigramIndex.txt"
 UNIGRAM_STEM_INDEX_FILE = "stemIndex.txt"
@@ -201,7 +201,7 @@ def main():
     opts = {x[0]:x[1] for x in opts}
     sys_id = int(opts['--sys'])
 
-    if sys_id not in range(1,8) or sys_id == 3:
+    if sys_id not in range(1,9) or sys_id == 3:
         print "System number has to be from 1 to 7. 3 is Lucene"
         sys.exit(-1)
 
@@ -230,7 +230,11 @@ def main():
             # 3 synonyms per word found in dictionary
             queryTerms = DictExpandQuery(queryTerms,3)
         elif sys_id == 6:
-            index, queryTerms = StopList(index, queryTerms) 
+            index, queryTerms = StopList(index, queryTerms)
+        elif sys_id == 8:
+            index, queryTerms = StopList(index, queryTerms)
+            score= calculateScore(list(set(queryTerms)),index,queryTerms,queryID)
+            queryTerms=tfIdfPRF(score,index,queryTerms)
 
         distinctQueryTerms=list(set(queryTerms))
         eval_results = readQueryDocumentsRanking(QUERY_DOCUMENTS_FILE)

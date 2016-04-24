@@ -12,6 +12,7 @@ SYSTEM NUMBERS
 5. Query expansion(synonyms) + BM25
 6. BM25 + stopping
 7. BM25 + stemming
+8. BM25+QueryExpansion+stopping
 
 Model 3 uses Lucene and is implemented in Java.
 Models 1,2,4,5,6,7 are implemented in Python, using a sequence of commands for the steps
